@@ -24,8 +24,8 @@ class Product(private val INDEX: String) {
   private var tail: Node = null;
 
   // Getters
-  def getHead(): Node = head;
-  def getTail(): Node = tail;
+  def getHead(): Int = head.getValue();
+  def getTail(): Int = tail.getValue();
   def getIndex(): String = INDEX;
   def getSize(): Int = this.size;
 
@@ -74,22 +74,8 @@ class Product(private val INDEX: String) {
 
   def getMedian(): Double = {
     val productArray = this.toArray();
-    System.out.print("Before: ");
-    for(p <- productArray)
-      {
-        System.out.print(p.getValue());
-        System.out.print(", ");
-      }
-      System.out.println();
 
     this.sort(productArray);
-    System.out.print("After: ");
-    for(p <- productArray)
-    {
-      System.out.print(p.getValue());
-      System.out.print(", ");
-    }
-    System.out.println();
     if(this.getSize() % 2 == 0)
       {
         val mid1 = productArray(this.getSize()/2 - 1).getValue()
@@ -152,21 +138,36 @@ class Product(private val INDEX: String) {
   }
 }
 
+class Basket() {
+  private var basket : Map[Product, Integer] = Map();
+
+  def add(p : Product): Unit = {
+    if(basket.contains(p)) { basket = basket.updated(p, basket(p) + 1); }else{
+      basket = basket ++ Map(p -> 1);
+    }
+  }
+
+  def getTotal() : Float = {
+    var total = 0.00f;
+    basket.foreach{case (p, q) => total += p.getHead() * q}
+    total;
+  }
+
+  def Print() : Unit = {
+    println("Product\tQuantity\tCurrent Amount\t Total")
+    basket.foreach{ case (p, q) => println(s"${p.getIndex()} : \t${q} : \t${p.getHead()} : \t\t\t${p.getHead() * q}")}
+  }
+}
+
 object MyApp extends App {
 
   // *******************************************************************************************************************
   // application logic
 
   // read data from file
-  val mapdata = readFile("./src/main/scala/data.txt")
-  val customList = readFileCustom("./src/main/scala/data.txt")
+  val customMap = readFileCustom("./src/main/scala/data.txt")
   // print data to check it's been read in correctly
-  for(p <- customList)
-    {
-      p.Print();
-    }
-
-  println(mapdata)
+  println(customMap);
 
   // define menu options as a Map of actions
   // for each menu item:
@@ -179,6 +180,7 @@ object MyApp extends App {
     4 -> handleFour,
     5 -> handleFive,
     6 -> handleSix,
+    7 -> handleSeven,
     0 -> handleZero
   )
 
@@ -201,10 +203,11 @@ object MyApp extends App {
       """|Please select one of the following:
          |  1 - show points for all teams
          |  2 - show points for selected team
-         |  3 - show highest points for select team
-         |  4 - show lowest points for selected team
-         |  5 - show median points for selected team
-         |  6 - show average points for selected team
+         |  3 - show highest points for all teams
+         |  4 - show lowest points for all teams
+         |  5 - show median points for all teams
+         |  6 - compare average between selected teams
+         |  7 - Add items to basket
          |  0 - quit""".stripMargin)
     readInt()
   }
@@ -233,22 +236,27 @@ object MyApp extends App {
   }
 
   def handleThree(): Boolean = {
-    mnuShowHighestPointsForTeam()
+    mnuShowHighestPoints(highestPoints)
     true
   }
 
   def handleFour(): Boolean = {
-    mnuShowLowestPointsForTeam()
+    mnuShowLowestPoints(lowestPoints)
     true
   }
 
   def handleFive(): Boolean = {
-    mnuShowMedianPointsForTeam()
+    mnuShowMedianPoints(medianPoints)
     true
   }
 
   def handleSix(): Boolean = {
-    mnuShowAveragePointsForTeam()
+    mnuShowAveragePoints(currentPointsForTeam)
+    true
+  }
+
+  def handleSeven(): Boolean = {
+    mnuBasket(currentPointsForTeam)
     true
   }
 
@@ -261,50 +269,22 @@ object MyApp extends App {
   // *******************************************************************************************************************
   // UTILITY FUNCTIONS
 
-  // reads data file - comma separated file
-  def readFile(filename: String): Map[String, Int] = {
-    // create buffer to build up map as we read each line
-    var mapBuffer: Map[String, Int] = Map()
+  def readFileCustom(filename: String): Map[String, Product] = {
+    var map : Map[String, Product] = Map();
     try {
       for (line <- Source.fromFile(filename).getLines()) {
-        // for each line
-        val splitline = line.split(",").map(_.trim).toList // split line at , and convert to List
-
-        // add element to map buffer
-        // splitline is line from file as List, e.g. List(Bayern Munich, 24)
-        // use head as key
-        // tail is a list, but need just the first (only in this case) element, so use head of tail and convert to int
-        mapBuffer = mapBuffer ++ Map(splitline.head -> splitline.tail.head.toInt)
-
-      }
-    } catch {
-      case ex: Exception => println("Sorry, an exception happened.")
-    }
-    mapBuffer
-  }
-
-  def readFileCustom(filename: String): Array[Product] = {
-    val ProductList = new Array[Product](Source.fromFile(filename).getLines().length);
-    var count = 0;
-
-    try {
-      for (line <- Source.fromFile(filename).getLines()) {
-
         val splitline = line.split(",").map(_.trim).toList
         val p = new Product(splitline.head);
         for(v <- splitline.tail)
           {
             p.setHead(v.toInt);
           }
-
-        ProductList(count) = p;
-        count+=1
-
+        map = map ++ Map(p.getIndex() -> p);;
       }
     } catch {
       case ex: Exception => println("Sorry, an exception happened.")
     }
-    ProductList
+    map
   }
 
 
@@ -313,68 +293,57 @@ object MyApp extends App {
   // each of these functions accepts user input if required for an operation,
   // invokes the relevant operation function and displays the results
 
-  def mnuShowPoints(f: () => Map[String, Int]) = {
-    f() foreach { case (x, y) => println(s"$x: $y") }
-    for(p <- customList)
-    {
-      p.Print();
-    }
+  def mnuShowPoints(f: () => Map[String, Product]) = {
+    f() foreach { case (x, y) => y.Print() }
   }
 
-  def mnuShowPointsForTeam(f: (String) => (String, Int)) = {
+  def mnuShowPointsForTeam(f: (String) => (Product)) = {
     print("Team>")
     val data = f(readLine)
-    println(s"${data._1}: ${data._2}")
-    for(p <- customList)
-    {
-      if(p.getIndex() == data._1){
-        p.Print();
-      }
-    }
+    if(data != null) data.Print();
+
   }
 
-  def mnuShowHighestPointsForTeam(): Unit = {
-    print("Team>")
-    val team = readLine
-    for(p <- customList)
-    {
-      if(p.getIndex() == team){
-        println(s"${team}: ${p.getMax()}")
-      }
-    }
+  def mnuShowHighestPoints(f: () => Map[String, Product]): Unit = {
+    f().foreach{ case(i, p) => println(s"${i} Highest: ${p.getMax()}") }
   }
 
-  def mnuShowLowestPointsForTeam(): Unit = {
-    print("Team>")
-    val team = readLine
-    for(p <- customList)
-    {
-      if(p.getIndex() == team){
-        println(s"${team}: ${p.getMin()}")
-      }
-    }
+  def mnuShowLowestPoints(f : () => Map[String, Product]): Unit = {
+    f().foreach{ case(i, p) => println(s"${i} Lowest: ${p.getMin()}") }
   }
 
-  def mnuShowMedianPointsForTeam(): Unit = {
-    print("Team>")
-    val team = readLine
-    for(p <- customList)
-    {
-      if(p.getIndex() == team){
-        println(s"${team}: ${p.getMedian()}")
-      }
-    }
+  def mnuShowMedianPoints(f: () => Map[String, Product]): Unit = {
+    f().foreach{ case(i, p) => println(s"${i} Median: ${p.getMedian()}") }
   }
 
-  def mnuShowAveragePointsForTeam(): Unit = {
-    print("Team>")
-    val team = readLine
-    for(p <- customList)
-    {
-      if(p.getIndex() == team){
-        println(s"${team}: ${p.getAverage()}")
+  def mnuShowAveragePoints(f: (String) => (Product)): Unit = {
+    print("Team 1>")
+    val team1 = f(readLine)
+    print("Team 2>")
+    val team2 = f(readLine)
+    if(team1 != null && team2 != null)
+      {
+        println(s"${team1.getIndex()} Average: ${team1.getAverage()}")
+        println(s"${team2.getIndex()} Average: ${team2.getAverage()}")
       }
+  }
+
+  def mnuBasket(f: (String) => (Product)): Unit = {
+    print("Type a product name or type Quit to leave\nProduct>")
+    val basket : Basket = new Basket();
+    var tmp : Product = null;
+    var team :String = readLine()
+  while(team != "Quit")
+    {
+      tmp = f(team);
+      if(tmp != null){basket.add(tmp)}
+      print("Type a product name or type Quit to leave\nProduct>")
+      team = readLine();
     }
+    println("You have selected quit");
+    println(s"Your total is: ${basket.getTotal()}")
+    basket.Print();
+
   }
 
   // *******************************************************************************************************************
@@ -382,18 +351,39 @@ object MyApp extends App {
   // each of these performs the required operation on the data and returns
   // the results to be displayed - does not interact with user
 
-  def currentPoints(): Map[String, Int] = {
+  def currentPoints(): Map[String, Product] = {
     // sort map by value in descending order -
     // see http://alvinalexander.com/scala/how-to-sort-map-in-scala-key-value-sortby-sortwith
-    ListMap(mapdata.toSeq.sortWith(_._2 > _._2): _*)
+
+    // sort list from highest to loqest based on the most recent value
+    ListMap(customMap.toSeq.sortWith(_._2.getHead > _._2.getHead): _*)
   }
 
-  def currentPointsForTeam(team: String): (String, Int) = {
-    val points = mapdata.get(team) match{
-      case Some(p) => p
-      case None => 0
+  def highestPoints(): Map[String, Product] = {
+    // Sorts list from highest to lowest
+    ListMap(customMap.toSeq.sortWith(_._2.getMax() > _._2.getMax()): _*);
+  }
+
+  def lowestPoints(): Map[String, Product] ={
+    // sorts list from lowest to highest
+    ListMap(customMap.toSeq.sortWith(_._2.getMin() < _._2.getMin()): _*);
+  }
+
+  def medianPoints(): Map[String, Product] = {
+    // sort list based on the result of the median from highest to lowest
+    ListMap(customMap.toSeq.sortWith(_._2.getMedian() > _._2.getMedian()): _*);
+  }
+
+  def averagePoints(): Map[String, Product] = {
+    // sort list based on the average from highest to lowest
+    ListMap(customMap.toSeq.sortWith(_._2.getAverage() > _._2.getAverage()): _*);
+  }
+
+  def currentPointsForTeam(team: String): Product = {
+    customMap.get(team) match{
+      case Some(p) => p;
+      case None => println("Team not found"); null
     }
-    (team, points)
   }
 
 
