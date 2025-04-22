@@ -164,6 +164,14 @@ object MyApp extends App {
   // *******************************************************************************************************************
   // application logic
 
+  // To test?
+  val toTest: Boolean = true;
+  if(toTest)
+    {
+      test();
+    }
+
+
   // read data from file
   val customMap = readFileCustom("./src/main/scala/data.txt")
   // print data to check it's been read in correctly
@@ -385,8 +393,98 @@ object MyApp extends App {
       case None => println("Team not found"); null
     }
   }
-
-
   // *******************************************************************************************************************
+  // TESTING FUNCTIONS
+  // Each of these are test scenarios in which I create a predefined list
+  // Ensuring that each item that is given will give back the expected data result
+
+  def test() : Unit = {
+
+    // Pre-defined Product Class to test items
+      val p = new Product("Test");
+      p.setHead(54);
+    p.setHead(41);
+    p.setHead(49);
+
+    val p2 = new Product("Test2");
+    p2.setHead(90);
+    p2.setHead(50);
+    p2.setHead(30);
+    p2.setHead(60);
+
+    val basket = new Basket();
+
+    //Testing individual product
+    testIndexName(p);
+    testRecent(p);
+    testLast(p);
+    testSize(p);
+    testTotal(p);
+    testMedian(p);
+    testAverage(p);
+    testMax(p);
+    testMin(p);
+    testPrint(p);
+
+
+    //Testing Basket
+    // 1 of each item
+    basket.add(p);
+    basket.add(p2);
+    testBasket(basket);
+
+    // Adding an additional item
+    basket.add(p)
+    testBasketAdditional(basket);
+  }
+
+  def testIndexName(p : Product): Unit = {
+    assert(p.getIndex() == "Test", s"Expected 'Test' but got '${p.getIndex()}'");
+  }
+
+  def testRecent(p : Product): Unit = {
+    assert(p.getHead() == 49, s"Expected 49 but got ${p.getHead()}");
+  }
+  def testLast(p : Product): Unit = {
+    assert(p.getTail() == 54, s"Expected 54 but got ${p.getTail()}")
+  }
+
+  def testSize(p : Product): Unit = {
+    assert(p.getSize() == 3, s"Expected 3 but got ${p.getSize()}")
+  }
+
+  def testTotal(p: Product): Unit ={
+    assert(p.getTotal() == 144, s"Expected 144 but got ${p.getTotal()}")
+  }
+
+  def testMedian(p : Product) : Unit = {
+    assert(p.getMedian() == 49, s"Expected 49 but got ${p.getMedian()}")
+  }
+
+  def testAverage(p : Product) : Unit = {
+    assert(p.getAverage() == 48, s"Expected 48 but got ${p.getAverage()}")
+  }
+
+  def testMax(p : Product) : Unit ={
+    assert(p.getMax() == 54, s"Expected 54 but got ${p.getMax()}")
+  }
+
+  def testMin(p : Product) : Unit ={
+    assert(p.getMin() == 41, s"Expected 41 but got ${p.getMin()}")
+  }
+
+  def testPrint(p : Product) : Unit = {
+    // Test the print function, prints the last item added and so on,
+    // head will always be the most recent
+    println("Test: 49, 41, 54");
+    p.Print();
+  }
+
+  def testBasket(b : Basket) : Unit = {
+    assert(b.getTotal() == 109.00, s"Expected 109.00 but got ${b.getTotal()}")
+  }
+  def testBasketAdditional(b : Basket) : Unit = {
+    assert(b.getTotal() == 158.00, s"Expected 158.00 but got ${b.getTotal()}")
+  }
 
 }
