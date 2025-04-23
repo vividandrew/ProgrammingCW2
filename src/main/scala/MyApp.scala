@@ -302,7 +302,7 @@ object MyApp extends App {
   // invokes the relevant operation function and displays the results
 
   def mnuShowPoints(f: () => Map[String, Product]) = {
-    f() foreach { case (x, y) => y.Print() }
+    f() foreach { case (x, y) => println(s"${x} current: ${y.getHead()}")}
   }
 
   def mnuShowPointsForTeam(f: (String) => (Product)) = {
@@ -360,7 +360,6 @@ object MyApp extends App {
   // the results to be displayed - does not interact with user
 
   def currentPoints(): Map[String, Product] = {
-    // sort map by value in descending order -
     // see http://alvinalexander.com/scala/how-to-sort-map-in-scala-key-value-sortby-sortwith
 
     // sort list from highest to loqest based on the most recent value
